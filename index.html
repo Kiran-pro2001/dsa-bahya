@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSA Bahya - Chatbot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="final.css">
+ 
+</head>
+<body>
+  <!-- <header>DSA Bahya</header>
+  <main>
+    <div class="chat-container">
+      <div id="chat-window"></div>
+      <form id="chat-form">
+        <input type="text" id="user-input" placeholder="Ask your DSA question here..." autocomplete="off" required />
+        <button type="submit">Send</button>
+        <button type="button" id="mic-btn" class="mic-btn">🎙️</button>
+      </form>
+    </div>
+  </main> -->
+  <header>
+    <img src="https://cdn-icons-png.flaticon.com/512/4712/4712079.png" alt="DSA Icon" />
+    <h1>DSA Bahya 🤖</h1>
+    <p style="color: #64748b; margin-top: 5px;">Ask me anything about Data Structures & Algorithms</p>
+  </header>
+
+  <div id="chat-window"></div>
+
+  <form id="chat-form">
+    <input type="text" id="user-input" placeholder="Type your question...">
+    <button type="submit"><i class="fas fa-paper-plane"></i></button>
+      <button type="button" class="mic-btn" id="mic-btn"><i class="fas fa-microphone"></i></button>
+  </form>
+<br>
+  <footer>
+    Made with ❤️ by <a href="https://www.linkedin.com/in/kiran-kumar-sde/">Er. Kiran Kumar</a> to <a href="https://www.linkedin.com/in/rohit-negi9/">Rohit Negi Sir </a> 
+  </footer>
+
+<br><br><br>
+
+
+  <script>
+    const form = document.getElementById('chat-form');
+    const input = document.getElementById('user-input');
+    const chatWindow = document.getElementById('chat-window');
+    const micBtn = document.getElementById('mic-btn');
+
+    const API_KEY = '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';
+    const MODEL = "mistralai/mistral-7b-instruct";
+
+    async function askBot(question) {
+      try {
+        const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_KEY}`
+          },
+          body: JSON.stringify({
+            model: MODEL,
+            messages: [{ role: 'user', content: question }],
+            stream: false
+          })
+        });
+
+        const j = await r.json();
+        return j.choices?.[0]?.message?.content || 'Sorry, no response.';
+      } catch (error) {
+        return `⚠️ Error: ${error.message}`;
+      }
+    }
+
+    function addMessage(text, cls) {
+      const div = document.createElement('div');
+      div.className = `message ${cls}`;
+      div.textContent = text;
+      chatWindow.appendChild(div);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const q = input.value.trim();
+      if (!q) return;
+      addMessage(q, 'user');
+      input.value = '';
+      addMessage('⏳ thinking...', 'bot');
+      const resp = await askBot(q);
+      chatWindow.lastChild.textContent = resp;
+    });
+
+    // Voice Recognition
+    const recognition = 'webkitSpeechRecognition' in window ? new webkitSpeechRecognition() : null;
+
+    if (recognition) {
+      recognition.lang = 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      micBtn.addEventListener('click', () => {
+        recognition.start();
+        micBtn.textContent = '🎤 Listening...';
+      });
+
+      recognition.onresult = (event) => {
+        const speechResult = event.results[0][0].transcript;
+        input.value = speechResult;
+        micBtn.textContent = '🎙️';
+      };
+
+      recognition.onerror = () => {
+        micBtn.textContent = '🎙️';
+        alert('Voice input failed. Please try again.');
+      };
+    } else {
+      micBtn.disabled = true;
+      micBtn.title = 'Voice recognition not supported';
+    }
+  </script>
+</body>
+</html>
